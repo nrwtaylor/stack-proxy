@@ -1,0 +1,14 @@
+[Unit]
+Description=stack-proxy - stack proxy
+Documentation=https://github.com/nrwtaylor/stack-proxy
+After=network.target
+
+[Service]
+EnvironmentFile=/home/user/stack-proxy/.env
+Type=simple
+User=user
+ExecStart=/usr/local/bin/node /home/user/stack-proxy/server.js
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
