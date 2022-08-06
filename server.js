@@ -5,23 +5,23 @@ const axios = require("axios");
 const path = require("path");
 const app = express();
 
-const dotenv = require("dotenv")
+const dotenv = require("dotenv");
 
-dotenv.config()
+dotenv.config();
 
 const port = process.env.PORT;
+const host = process.env.HOST;
 
 const var_dump = require("var_dump");
 
-var sslRootCAs = require('ssl-root-cas')
-sslRootCAs
-  .inject()
+var sslRootCAs = require("ssl-root-cas");
+sslRootCAs.inject();
 
 var counter = {};
 
 function getSlug(text) {
-//  var words = text.split(/[ .:;?!~,`"&|()<>{}\[\]\r\n/\\]+/); // note ' and - are >
-// Tok out the tilde
+  //  var words = text.split(/[ .:;?!~,`"&|()<>{}\[\]\r\n/\\]+/); // note ' and - are >
+  // Tok out the tilde
   var words = text.split(/[ .:;?!,`"&|()<>{}\[\]\r\n/\\]+/); // note ' and - are >
 
   const slugText = words.join("-");
@@ -34,11 +34,11 @@ function parseSlug(title, flag) {
   }
 
   const arr = title.split("-");
-  const tokens = arr.map(token => {
-return token;
+  const tokens = arr.map((token) => {
+    return token;
     //var trimmedToken = trimAlpha(token); // trimAlpha
-  //  var strippedToken = stripText(trimmedToken); // stripText
-   // return strippedToken;
+    //  var strippedToken = stripText(trimmedToken); // stripText
+    // return strippedToken;
   });
 
   return tokens;
@@ -133,7 +133,6 @@ function trimAlpha(text) {
   return str;
 }
 
-
 function isNumeric(token) {
   if (typeof token != "string") return false; // we only process strings!
   return (
@@ -175,9 +174,8 @@ function validateIP(request) {
   return true;
 }
 
-
 function stackFormat(text) {
-return text;
+  return text;
 }
 
 function errorAxios(error, message = null) {
@@ -201,17 +199,25 @@ function errorAxios(error, message = null) {
     console.log("error request path", error.request.path);
     console.log("error request message", error.request.message);
 
-    const errorId = error.response.data.errorMessage[0]["error"][0]["errorId"];
-    const message = error.response.data.errorMessage[0]["error"][0]["message"];
+    var errorId = null;
+    var message = null;
+    var domain = null;
+    var subdomain = null;
+    if (error?.response?.data?.errorMessage !== undefined) {
+      const errorId =
+        error.response.data.errorMessage[0]["error"][0]["errorId"];
+      const message =
+        error.response.data.errorMessage[0]["error"][0]["message"];
 
-    const domain = error.response.data.errorMessage[0]["error"][0]["domain"];
-    const subdomain =
-      error.response.data.errorMessage[0]["error"][0]["subdomain"];
+      const domain = error.response.data.errorMessage[0]["error"][0]["domain"];
+      const subdomain =
+        error.response.data.errorMessage[0]["error"][0]["subdomain"];
+    }
     console.log(
       "error id " + errorId + " message " + message + domain + ":" + subdomain
     );
 
-    console.log("error ".error);
+    console.error("error ", error);
   } else if (error.request) {
     // The request was made but no response was received
     console.log("The request was made but no response was received");
@@ -226,9 +232,8 @@ function errorAxios(error, message = null) {
   console.log("---");
 }
 
-app.use("/*", function(req, res) { 
-
-  const startTime = new Date()
+app.use("/*", function (req, res) {
+  const startTime = new Date();
   const queryParam = req.query;
 
   const site = queryParam.site;
@@ -238,31 +243,33 @@ app.use("/*", function(req, res) {
 
   const text = queryParam.keywords;
 
- const requestUrl = "https://stackr.ca" + req.originalUrl;
+//  const requestUrl = "https://stackr.ca" + req.originalUrl;
+  const requestUrl = host + req.originalUrl;
 
- const options = {
+
+  console.log("req.originalUrl", req.originalUrl);
+//    method: "GET",
+
+  const options = {
     url: requestUrl,
-    method: "GET",
+    method: req.method,
     responseType: "json",
     headers: {
       Accept: "application/json",
-      "Content-Type": "application/json"
-    }
+      "Content-Type": "application/json",
+    },
   };
 
   return axios(options)
-    .then(response => {
-        return res.status(200).send(response.data);
+    .then((response) => {
+      return res.status(200).send(response.data);
     })
-.catch((error) =>{
+    .catch((error) => {
       errorAxios(error, req.originalUrl);
 
-console.log(error);
-        return res.status(404).send(error);
-
-
-});
-
+      // console.log(error);
+      return res.status(error.response.status).send(error.response.data);
+    });
 });
 
 // listen to the port.
