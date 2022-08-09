@@ -243,7 +243,6 @@ app.use("/*", function (req, res) {
 
   const text = queryParam.keywords;
 
-//  const requestUrl = "https://stackr.ca" + req.originalUrl;
   const requestUrl = host + req.originalUrl;
 
 
@@ -258,17 +257,25 @@ app.use("/*", function (req, res) {
       Accept: "application/json",
       "Content-Type": "application/json",
     },
+//  proxy: {
+//    host: host,
+//    port: 443
+//  }
   };
 
   return axios(options)
     .then((response) => {
+console.log(response);
       return res.status(200).send(response.data);
     })
     .catch((error) => {
       errorAxios(error, req.originalUrl);
-
+console.log(error);
       // console.log(error);
+if (error && error.response && error.response.status) {
       return res.status(error.response.status).send(error.response.data);
+}
+      return res.status(500).send({message:"Proxy error"});
     });
 });
 
