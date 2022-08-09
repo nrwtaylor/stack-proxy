@@ -1,20 +1,24 @@
 #!/usr/bin/env node
-const express = require("express");
-const axios = require("axios");
-
-const path = require("path");
+//const express = require("express");
+import express from "express";
+//const axios = require("axios");
+import axios from "axios";
+import fetch from "node-fetch";
+//const path = require("path");
+import path from "path";
 const app = express();
 
-const dotenv = require("dotenv");
-
+//	const dotenv = require("dotenv");
+import dotenv from "dotenv";
 dotenv.config();
 
 const port = process.env.PORT;
 const host = process.env.HOST;
 
-const var_dump = require("var_dump");
+//const var_dump = require("var_dump");
 
-var sslRootCAs = require("ssl-root-cas");
+//var sslRootCAs = require("ssl-root-cas");
+import sslRootCAs from "ssl-root-cas";
 sslRootCAs.inject();
 
 var counter = {};
@@ -245,38 +249,45 @@ app.use("/*", function (req, res) {
 
   const requestUrl = host + req.originalUrl;
 
-
   console.log("req.originalUrl", req.originalUrl);
-//    method: "GET",
+  //    method: "GET",
 
   const options = {
-    url: requestUrl,
+    //    url: requestUrl,
+    //    method: 'POST',
     method: req.method,
-    responseType: "json",
-    headers: {
-      Accept: "application/json",
-      "Content-Type": "application/json",
+    //    responseType: "json",
+    //    headers: {
+    //      Accept: "application/json",
+    //      "Content-Type": "application/json",
+    //    },
+    headers: req.headers,
+    proxy: {
+      host: host,
+      port: 443,
     },
-//  proxy: {
-//    host: host,
-//    port: 443
-//  }
   };
+  console.log("options", options);
+  console.log("requestUrl", requestUrl);
+  return (
+    fetch(requestUrl, options)
+      //  return axios(options)
+      .then((response) => {
+        console.log(response);
+        //      return res.status(200).send(response.data);
 
-  return axios(options)
-    .then((response) => {
-console.log(response);
-      return res.status(200).send(response.data);
-    })
-    .catch((error) => {
-      errorAxios(error, req.originalUrl);
-console.log(error);
-      // console.log(error);
-if (error && error.response && error.response.status) {
-      return res.status(error.response.status).send(error.response.data);
-}
-      return res.status(500).send({message:"Proxy error"});
-    });
+        return res.status(response.status).send(response.text());
+      })
+      .catch((error) => {
+        errorAxios(error, req.originalUrl);
+        console.log(error);
+        // console.log(error);
+        if (error && error.response && error.response.status) {
+          return res.status(error.response.status).send(error.response.data);
+        }
+        return res.status(500).send({ message: "Proxy error" });
+      })
+  );
 });
 
 // listen to the port.
