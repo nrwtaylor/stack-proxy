@@ -249,9 +249,9 @@ app.use("/*", function (req, res) {
 
   const requestUrl = host + req.originalUrl;
 
-  console.log("req.originalUrl", req.originalUrl);
+  console.log("requestUrl", requestUrl);
   //    method: "GET",
-
+console.log("req.headers", req.headers);
   const options = {
     //    url: requestUrl,
     //    method: 'POST',
@@ -262,21 +262,43 @@ app.use("/*", function (req, res) {
     //      "Content-Type": "application/json",
     //    },
     headers: req.headers,
-    proxy: {
-      host: host,
-      port: 443,
-    },
+//    proxy: {
+//      host: host,
+//      port: 443,
+//    },
   };
-  console.log("options", options);
-  console.log("requestUrl", requestUrl);
+//  console.log("options", options);
+//  console.log("requestUrl", requestUrl);
   return (
     fetch(requestUrl, options)
       //  return axios(options)
       .then((response) => {
-        console.log(response);
+console.log("response",response);
+
+const contentType = response.headers.get('content-type');
+
+if (contentType === "application/json") {
+return response.json().then((data)=>{
+        return res.status(200).send(data);
+});
+
+}
+//response.text().then((data)=>{
+//        return res.status(200).send(data);
+//});
+
+return response.text().then((data)=>{
+//        console.log("response", response);
+        return res.status(200).send(data);
+
+});
+
+
+//        console.log("response", response);
         //      return res.status(200).send(response.data);
 
-        return res.status(response.status).send(response.text());
+
+//        return res.status(response.status).send(response.text());
       })
       .catch((error) => {
         errorAxios(error, req.originalUrl);
